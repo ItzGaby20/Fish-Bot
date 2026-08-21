@@ -70,7 +70,7 @@ async def aclist(ctx):
 @bot.command(name="fish")
 async def fish(ctx):
     if ctx.author.id == BOT_OWNER_ID or ctx.author.id in allowed_users:
-        await ctx.reply("𝘗𝘦𝘴𝘵𝘦 🐟")
+        await ctx.reply("Here is ya fish 🐟")
     else:
         await ctx.reply("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝒏𝘵𝘭𝘺 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷𝚎 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴ε 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.")
 
