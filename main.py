@@ -9,7 +9,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Your Supreme Bot Owner ID (Updated!)
+# Your Supreme Bot Owner ID
 BOT_OWNER_ID = 1429893158740820056
 
 # Set to store IDs of users allowed to use !fish
@@ -22,7 +22,6 @@ async def on_ready():
 # 1. Grant Access Command (!access @user)
 @bot.command(name="access")
 async def access(ctx, member: discord.Member = None):
-    # Only you (the Bot Owner) can run this command
     if ctx.author.id != BOT_OWNER_ID:
         await ctx.reply("❌ Only the bot owner can use this command!")
         return
@@ -37,9 +36,8 @@ async def access(ctx, member: discord.Member = None):
 # 2. Revoke Access Command (!unaccess @user)
 @bot.command(name="unaccess")
 async def unaccess(ctx, member: discord.Member = None):
-    # Only you (the Bot Owner) can run this command
     if ctx.author.id != BOT_OWNER_ID:
-        await ctx.reply("❌ Only the bot owner can use this command!")
+        await ctx.reply("❌ Only the oot owner can use this command!")
         return
 
     if member is None:
@@ -55,7 +53,6 @@ async def unaccess(ctx, member: discord.Member = None):
 # 3. View Access List Command (!aclist)
 @bot.command(name="aclist")
 async def aclist(ctx):
-    # Only you (the Bot Owner) can run this command
     if ctx.author.id != BOT_OWNER_ID:
         await ctx.reply("❌ Only the bot owner can use this command!")
         return
@@ -64,7 +61,6 @@ async def aclist(ctx):
         await ctx.reply("ℹ️ The access list is currently empty. No one has permission to fish.")
         return
 
-    # Build the list of users with access
     list_mentions = [f"• <@{user_id}>" for user_id in allowed_users]
     access_list_msg = "📋 **Users with access to `!fish`:**\n" + "\n".join(list_mentions)
     
@@ -73,10 +69,14 @@ async def aclist(ctx):
 # 4. Classic Fish Command (!fish)
 @bot.command(name="fish")
 async def fish(ctx):
-    # Bot Owner always has access, others must be in the allowed_users set
     if ctx.author.id == BOT_OWNER_ID or ctx.author.id in allowed_users:
-        await ctx.reply("Here is ya fish 🐟")
+        await ctx.reply("𝘗𝘦𝘴𝘵𝘦 🐟")
     else:
-        await ctx.reply("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭𝘺 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷𝘦 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴𝘦 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.")
+        await ctx.reply("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝒏𝘵𝘭𝘺 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷𝚎 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴ε 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.")
+
+# 5. Troll Command (!cmd) - Public for everyone!
+@bot.command(name="cmd")
+async def cmd(ctx):
+    await ctx.reply("Imagine using this command only to realize that it does nothing. 🫵😂")
 
 bot.run(os.environ.get("DISCORD_TOKEN"))
