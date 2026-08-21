@@ -17,7 +17,9 @@ allowed_users = set()
 
 @bot.event
 async def on_ready():
-    print(f"The squad is up! {bot.user.name} is running for Bot Owner Gaby! 🐟")
+    print(f"The squad is up! {bot.user.name} is running for bot owner Gaby! 🐟")
+    # Default status at startup
+    await bot.change_presence(activity=discord.Game(name="with fishes 🐟"))
 
 # 1. Grant Access Command (!access @user)
 @bot.command(name="access")
@@ -37,7 +39,7 @@ async def access(ctx, member: discord.Member = None):
 @bot.command(name="unaccess")
 async def unaccess(ctx, member: discord.Member = None):
     if ctx.author.id != BOT_OWNER_ID:
-        await ctx.reply("❌ Only the oot owner can use this command!")
+        await ctx.reply("❌ Only the bot owner can use this command!")
         return
 
     if member is None:
@@ -72,11 +74,26 @@ async def fish(ctx):
     if ctx.author.id == BOT_OWNER_ID or ctx.author.id in allowed_users:
         await ctx.reply("Here is ya fish 🐟")
     else:
-        await ctx.reply("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝒏𝘵𝘭𝘺 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷𝚎 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴ε 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.")
+        await ctx.reply("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭𝘺 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷𝘦 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴𝘦 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.")
 
 # 5. Troll Command (!cmd) - Public for everyone!
 @bot.command(name="cmd")
 async def cmd(ctx):
     await ctx.reply("Imagine using this command only to realize that it does nothing. 🫵😂")
+
+# 6. Change Bot Status Command (!status [text]) - Owner Only!
+@bot.command(name="status")
+async def status(ctx, *, text: str = None):
+    if ctx.author.id != BOT_OWNER_ID:
+        await ctx.reply("❌ Only the bot owner can use this command!")
+        return
+
+    if text is None:
+        await ctx.reply("❌ Please provide a text for the status! Example: `!status coding...`")
+        return
+
+    # Changes the bot's "Playing..." status instantly
+    await bot.change_presence(activity=discord.Game(name=text))
+    await ctx.reply(f"⚙️ Status updated successfully to: **Playing {text}**")
 
 bot.run(os.environ.get("DISCORD_TOKEN"))
