@@ -5,44 +5,44 @@ from discord import app_commands
 
 intents = discord.Intents.default()
 intents.message_content = True
-intents.members = True # Obligatoriu ca să vadă lista de oameni din server
+intents.members = True  # Required to scan the server members for the dropdown
 
 class FishBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix="!", intents=intents)
-        # Lista în care salvăm ID-urile celor care primesc acces
+        # Set to store IDs of users allowed to use /fish
         self.allowed_users = set()
 
     async def setup_hook(self):
-        # Sincronizăm comenzile de tip Slash (/) cu Discord
+        # Syncs the slash commands with Discord instantly
         await self.tree.sync()
 
 bot = FishBot()
 
-# ID-ul tău suprem de Owner
+# Your Supreme Server Owner ID
 OWNER_ID = 1429893158740820056
 
-# Interfața cu meniul Dropdown pentru selectarea membrilor
+# Dropdown selection menu for giving access
 class MemberSelect(discord.ui.Select):
     def __init__(self, bot_instance, members):
         self.bot_instance = bot_instance
-        # Generăm opțiunile din listă cu membrii reali din server
+        # Generate menu options using real members from the server
         options = [
             discord.SelectOption(label=m.name, value=str(m.id), description=f"ID: {m.id}")
             for m in members if not m.bot or m.id != bot_instance.user.id
-        ][:25] # Limitare Discord de max 25 oameni în listă
-        super().__init__(placeholder="Alege persoana care primește acces... 🐟", options=options)
+        ][:25]  # Discord limit: max 25 items per dropdown
+        super().__init__(placeholder="Choose a user to grant access... 🐟", options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        # Doar tu ai voie să interacționezi cu meniul
+        # Only you (the Owner) can interact with this menu
         if interaction.user.id != OWNER_ID:
-            await interaction.response.send_message("❌ Nu ești Zacky ca să împarți pești!", ephemeral=True)
+            await interaction.response.send_message("❌ You are not Zacky to distribute fishes!", ephemeral=True)
             return
         
         user_id = int(self.values[0])
         self.bot_instance.allowed_users.add(user_id)
         
-        await interaction.response.send_message(f"✅ Utilizatorul <@{user_id}> are acum permisiunea să pescuiască!", ephemeral=True)
+        await interaction.response.send_message(f"✅ User <@{user_id}> now has permission to fish!", ephemeral=True)
 
 class MemberSelectView(discord.ui.View):
     def __init__(self, bot_instance, members):
@@ -51,24 +51,24 @@ class MemberSelectView(discord.ui.View):
 
 @bot.event
 async def on_ready():
-    print(f"S-a aprins brigada! {bot.user.name} e gata să împartă pești! 🐟")
+    print(f"The squad is up! {bot.user.name} is ready to grant fishes! 🐟")
 
-# Comanda Supremă de dat acces
-@bot.tree.command(name="access", description="Oferă cuiva acces la comanda /fish (Doar pentru Owner)")
+# Admin Access Command
+@bot.tree.command(name="access", description="Grant a user access to the /fish command (Owner Only)")
 async def access(interaction: discord.Interaction):
     if interaction.user.id != OWNER_ID:
-        await interaction.response.send_message("❌ Doar Server Owner-ul poate folosi această comandă!", ephemeral=True)
+        await interaction.response.send_message("❌ Only the Server Owner can use this command!", ephemeral=True)
         return
 
-    # Luăm lista de oameni din server
+    # Fetch all members currently in the server
     members = interaction.guild.members
     view = MemberSelectView(bot, members)
-    await interaction.response.send_message("⚙️ **Panou Control Pești:** Alege cine primește drepturi:", view=view, ephemeral=True)
+    await interaction.response.send_message("⚙️ **Fish Control Panel:** Choose who gets access below:", view=view, ephemeral=True)
 
-# Comanda de Pescuit
-@bot.tree.command(name="fish", description="Primește un pește dacă ai permisiune")
+# Fish Command
+@bot.tree.command(name="fish", description="Receive a fish if you have permission")
 async def fish(interaction: discord.Interaction):
-    # Verificăm dacă ești tu (Ownerul are mereu acces) SAU dacă ești în lista de acces
+    # Owner always has access, others must be in the allowed_users set
     if interaction.user.id == OWNER_ID or interaction.user.id in bot.allowed_users:
         await interaction.response.send_message("𝘗𝘦𝘴𝘵𝘦 🐟")
     else:
