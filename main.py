@@ -67,7 +67,7 @@ class PublicCmdBarView(discord.ui.View):
         if interaction.user.id == BOT_OWNER_ID or interaction.user.id in allowed_users:
             await interaction.response.send_message("Here is ya fish 🐟", ephemeral=False)
         else:
-            await interaction.response.send_message("❌ 𝘚𝘰𝘳𝘳ÿ ÿ𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭ÿ 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷ε 𝘱ε𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴ε 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.", ephemeral=True)
+            await interaction.response.send_message("❌ 𝘚𝘰𝘳𝘳ÿ ÿ𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭ÿ 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷ε 𝘱ε𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴ε 𝘵𝘩𝘪𝕤 𝘤𝘰𝘮𝘢𝘯𝘥.", ephemeral=True)
 
     @discord.ui.button(label="Troll Cmd 🫵", style=discord.ButtonStyle.gray)
     async def troll_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -144,7 +144,13 @@ async def unaccess(ctx, member: discord.Member = None):
 @bot.command(name="fish")
 async def fish(ctx):
     if ctx.author.id == BOT_OWNER_ID or ctx.author.id in allowed_users: await ctx.reply("Here is ya fish 🐟")
-    else: await ctx.reply("❌ 𝘚𝘰𝘳𝘳ÿ ÿ𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭ÿ 𝘥𝘰𝘯’ｔ 𝘩𝘢𝘷ｅ 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪ｏ𝘯...")
+    else: await ctx.reply("❌ 𝘚𝘰𝘳𝘳ÿ ÿ𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭ÿ 𝘥ｏｎ’ｔ 𝘩ａｖｅ 𝘱ｅ𝘳𝘮𝘪𝘴𝘴𝘪ｏｎ...")
+
+@bot.command(name="ping")
+async def ping(ctx):
+    # Calculates API latency in milliseconds
+    latency = round(bot.latency * 1000)
+    await ctx.reply(f"🏓 **Pong!** Latency is **{latency}ms**.")
 
 # ==================== BOT MESSAGE PURGE COMMAND ====================
 
@@ -154,7 +160,6 @@ async def gberease(ctx):
         await ctx.reply("❌ Only the bot owner can use this command!")
         return
 
-    # Try to delete the command message to leave no trace in chat
     try:
         await ctx.message.delete()
     except discord.Forbidden:
@@ -164,10 +169,7 @@ async def gberease(ctx):
         return message.author.id == bot.user.id
 
     try:
-        # Scans the last 100 messages in the channel and purges only the bot's messages
         deleted = await ctx.channel.purge(limit=100, check=is_bot)
-        
-        # Sends a temporary confirmation message that auto-deletes after 3 seconds
         await ctx.send(f"🧹 Successfully deleted {len(deleted)} of my messages from this channel.", delete_after=3)
     except discord.Forbidden:
         await ctx.send("❌ I do not have the `Manage Messages` permission required to delete messages.", delete_after=5)
