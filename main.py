@@ -70,7 +70,7 @@ async def access(interaction: discord.Interaction):
 async def fish(interaction: discord.Interaction):
     # Owner always has access, others must be in the allowed_users set
     if interaction.user.id == OWNER_ID or interaction.user.id in bot.allowed_users:
-        await interaction.response.send_message("𝘗𝘦𝘴𝘵𝘦 🐟")
+        await interaction.response.send_message("Here is ya fish 🐟")
     else:
         await interaction.response.send_message("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭𝘺 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷𝘦 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴𝘦 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.", ephemeral=True)
 
