@@ -18,8 +18,8 @@ allowed_users = set()
 @bot.event
 async def on_ready():
     print(f"The squad is up! {bot.user.name} is running for bot owner Gaby! 🐟")
-    # Default status at startup
-    await bot.change_presence(activity=discord.Game(name="with fishes 🐟"))
+    # Default custom status at startup (the speech bubble style)
+    await bot.change_presence(activity=discord.CustomActivity(name="Thinking about fishes 🐟"))
 
 # 1. Grant Access Command (!access @user)
 @bot.command(name="access")
@@ -74,14 +74,14 @@ async def fish(ctx):
     if ctx.author.id == BOT_OWNER_ID or ctx.author.id in allowed_users:
         await ctx.reply("Here is ya fish 🐟")
     else:
-        await ctx.reply("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭𝘺 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷𝘦 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴𝘦 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.")
+        await ctx.reply("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭𝘺 𝘥𝘰𝘯’t 𝘩𝘢𝘷𝘦 𝘱ε𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴ε 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.")
 
 # 5. Troll Command (!cmd) - Public for everyone!
 @bot.command(name="cmd")
 async def cmd(ctx):
     await ctx.reply("Imagine using this command only to realize that it does nothing. 🫵😂")
 
-# 6. Change Bot Status Command (!status [text]) - Owner Only!
+# 6. Change Bot Activity Command (!status [text]) - Owner Only!
 @bot.command(name="status")
 async def status(ctx, *, text: str = None):
     if ctx.author.id != BOT_OWNER_ID:
@@ -89,11 +89,26 @@ async def status(ctx, *, text: str = None):
         return
 
     if text is None:
-        await ctx.reply("❌ Please provide a text for the status! Example: `!status coding...`")
+        await ctx.reply("❌ Please provide a text for the activity! Example: `!status coding...`")
         return
 
-    # Changes the bot's "Playing..." status instantly
+    # Changes the bot's "Playing..." status
     await bot.change_presence(activity=discord.Game(name=text))
-    await ctx.reply(f"⚙️ Status updated successfully to: **Playing {text}**")
+    await ctx.reply(f"⚙️ Activity updated successfully to: **Playing {text}**")
+
+# 7. Change Bot Custom Status Command (!status2 [text]) - Owner Only!
+@bot.command(name="status2")
+async def status2(ctx, *, text: str = None):
+    if ctx.author.id != BOT_OWNER_ID:
+        await ctx.reply("❌ Only the bot owner can use this command!")
+        return
+
+    if text is None:
+        await ctx.reply("❌ Please provide a text for the custom status! Example: `!status2 Stausul asta`")
+        return
+
+    # Changes the bot's Speech Bubble Custom Status exactly like the screenshot
+    await bot.change_presence(activity=discord.CustomActivity(name=text))
+    await ctx.reply(f"⚙️ Custom Status bubble updated successfully to: **{text}**")
 
 bot.run(os.environ.get("DISCORD_TOKEN"))
