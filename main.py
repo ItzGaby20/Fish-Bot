@@ -11,7 +11,6 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 BOT_OWNER_ID = 1429893158740820056
 
 # Dicționar pentru permisiuni dinamice per comandă
-# Structură: { user_id: ["fish", "ping"] }
 cmd_permissions = {}
 
 @bot.event
@@ -28,18 +27,15 @@ async def cmdaccess(ctx, member: discord.Member = None, cmd_name: str = None):
         return
 
     if not member or not cmd_name:
-        await ctx.reply("❌ Usage: `!cmdaccess @user [command_name]`\nExample: `!cmdaccess @John fish`")
+        await ctx.reply("❌ Usage: `!cmdaccess @user [command_name]`\nExample: `!cmdaccess @John gberease`")
         return
 
-    # Curățăm numele comenzii (scoatem prefixul ! dacă utilizatorul l-a scris din greșeală)
     cmd_name = cmd_name.lower().replace("!", "")
 
-    # Verificăm dacă comanda introdusă chiar există în bot
     if not bot.get_command(cmd_name):
         await ctx.reply(f"❌ The command `!{cmd_name}` does not exist.")
         return
 
-    # Adăugăm permisiunea în dicționar
     if member.id not in cmd_permissions:
         cmd_permissions[member.id] = []
     
@@ -50,7 +46,6 @@ async def cmdaccess(ctx, member: discord.Member = None, cmd_name: str = None):
         await ctx.reply(f"ℹ️ {member.mention} already has access to `!{cmd_name}`.")
 
 
-# Pentru urgențe: comanda veche simplă păstrată (oferă acces automat la !fish)
 @bot.command(name="access")
 async def access(ctx, member: discord.Member = None):
     if ctx.author.id != BOT_OWNER_ID: return
@@ -73,9 +68,7 @@ async def unaccess(ctx, member: discord.Member = None):
 
 @bot.command(name="fish")
 async def fish(ctx):
-    # Verifică dacă utilizatorul este owner-ul sau are permisiune explicită pentru comanda "fish"
     has_perm = member_has_perm(ctx.author.id, "fish")
-    
     if ctx.author.id == BOT_OWNER_ID or has_perm: 
         await ctx.reply("Here is ya fish 🐟")
     else: 
@@ -83,16 +76,23 @@ async def fish(ctx):
 
 @bot.command(name="ping")
 async def ping(ctx):
-    latency = round(bot.latency * 1000)
-    await ctx.reply(f"🏓 **Pong!** Latency is **{latency}ms**.")
+    has_perm = member_has_perm(ctx.author.id, "ping")
+    if ctx.author.id == BOT_OWNER_ID or has_perm:
+        latency = round(bot.latency * 1000)
+        await ctx.reply(f"🏓 **Pong!** Latency is **{latency}ms**.")
+    else:
+        await ctx.reply("❌ 𝘚𝘰𝘳𝘳ÿ ÿ𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭ÿ 𝘥ｏｎ’ｔ 𝘩ａｖｅ 𝘱ｅ𝘳𝘮𝘪𝘴𝘴𝘪ｏｎ...")
 
 
 # ==================== BOT MESSAGE PURGE COMMAND ====================
 
-@bot.command(name="gberease")
+@bot.command(name="gberase")
 async def gberease(ctx):
-    if ctx.author.id != BOT_OWNER_ID:
-        await ctx.reply("❌ Only the bot owner can use this command!")
+    # REPARAT: Acum verifică dacă utilizatorul este owner SAU are permisiune primită prin !cmdaccess
+    has_perm = member_has_perm(ctx.author.id, "gberease")
+    
+    if ctx.author.id != BOT_OWNER_ID and not has_perm:
+        await ctx.reply("❌ Only the bot owner or authorized users can use this command!")
         return
 
     try:
@@ -113,7 +113,6 @@ async def gberease(ctx):
 # ==================== HELPER FUNCTIONS ====================
 
 def member_has_perm(user_id: int, cmd_name: str) -> bool:
-    """Funcție ajutătoare care verifică dacă un ID are voie să ruleze o anumită comandă"""
     if user_id in cmd_permissions:
         return cmd_name in cmd_permissions[user_id]
     return False
