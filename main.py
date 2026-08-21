@@ -2,113 +2,151 @@ import os
 import discord
 from discord.ext import commands
 
-# Setting up intents so the bot can read messages and track tags
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Your Supreme Bot Owner ID
 BOT_OWNER_ID = 1429893158740820056
-
-# Set to store IDs of users allowed to use !fish
 allowed_users = set()
 
 @bot.event
 async def on_ready():
-    print(f"The squad is up! {bot.user.name} is running for bot owner Gaby! 🐟")
-    # Default custom status at startup (the speech bubble style)
+    print(f"The squad is up! {bot.user.name} is running with pop-up panels! 🐟")
     await bot.change_presence(activity=discord.CustomActivity(name="Thinking about fishes 🐟"))
 
-# 1. Grant Access Command (!access @user)
+# ==================== FORMULARE POP-UP (MODALS) ====================
+
+class AccessModal(discord.ui.Modal, title="Grant Access Control"):
+    user_id_input = discord.ui.TextInput(label="User ID", placeholder="Enter the 18+ digit Discord User ID here...", min_length=15, max_length=25)
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            u_id = int(self.user_id_input.value)
+            allowed_users.add(u_id)
+            await interaction.response.send_message(f"✅ Access GRANTED! User <@{u_id}> can now use `!fish`.", ephemeral=True)
+        except ValueError:
+            await interaction.response.send_message("❌ Invalid ID! Please make sure you enter numbers only.", ephemeral=True)
+
+class UnaccessModal(discord.ui.Modal, title="Revoke Access Control"):
+    user_id_input = discord.ui.TextInput(label="User ID", placeholder="Enter the 18+ digit Discord User ID here...", min_length=15, max_length=25)
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            u_id = int(self.user_id_input.value)
+            if u_id in allowed_users:
+                allowed_users.remove(u_id)
+                await interaction.response.send_message(f"❌ Access REVOKED! User <@{u_id}> can no longer use `!fish`.", ephemeral=True)
+            else:
+                await interaction.response.send_message("ℹ️ This user didn't have access anyway.", ephemeral=True)
+        except ValueError:
+            await interaction.response.send_message("❌ Invalid ID! Please make sure you enter numbers only.", ephemeral=True)
+
+class StatusModal(discord.ui.Modal, title="Change Bot Activity"):
+    status_input = discord.ui.TextInput(label="Activity Text", placeholder="What should the bot play? (e.g. coding...)", max_length=100)
+    async def on_submit(self, interaction: discord.Interaction):
+        text = self.status_input.value
+        await bot.change_presence(activity=discord.Game(name=text))
+        await interaction.response.send_message(f"⚙️ Activity updated successfully to: **Playing {text}**", ephemeral=True)
+
+class Status2Modal(discord.ui.Modal, title="Change Bot Custom Status Bubble"):
+    status2_input = discord.ui.TextInput(label="Custom Status Bubble Text", placeholder="Type your custom bubble text here...", max_length=100)
+    async def on_submit(self, interaction: discord.Interaction):
+        text = self.status2_input.value
+        await bot.change_presence(activity=discord.CustomActivity(name=text))
+        await interaction.response.send_message(f"⚙️ Custom Status bubble updated successfully to: **{text}**", ephemeral=True)
+
+
+# ==================== INTERFEȚE CU BUTOANE (VIEWS) ====================
+
+class PublicCmdBarView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Fish 🐟", style=discord.ButtonStyle.green)
+    async def fish_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id == BOT_OWNER_ID or interaction.user.id in allowed_users:
+            await interaction.response.send_message("Here is ya fish 🐟", ephemeral=False)
+        else:
+            await interaction.response.send_message("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭𝘺 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷ε 𝘱ε𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴ε 𝘵𝘩𝘪𝕤 𝘤𝘰𝘮𝘢𝘯𝘥.", ephemeral=True)
+
+    @discord.ui.button(label="Troll Cmd 🫵", style=discord.ButtonStyle.gray)
+    async def troll_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Imagine using this command only to realize that it does nothing. 🫵😂", ephemeral=False)
+
+
+class OwnerCmdBarView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Access User ✅", style=discord.ButtonStyle.green)
+    async def access_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != BOT_OWNER_ID:
+            await interaction.response.send_message("❌ Only the bot owner can use this panel!", ephemeral=True)
+            return
+        await interaction.response.send_modal(AccessModal())
+
+    @discord.ui.button(label="Unaccess User ❌", style=discord.ButtonStyle.danger)
+    async def unaccess_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != BOT_OWNER_ID:
+            await interaction.response.send_message("❌ Only the bot owner can use this panel!", ephemeral=True)
+            return
+        await interaction.response.send_modal(UnaccessModal())
+
+    @discord.ui.button(label="Check Access List 📋", style=discord.ButtonStyle.primary)
+    async def aclist_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != BOT_OWNER_ID:
+            await interaction.response.send_message("❌ Only the bot owner can use this panel!", ephemeral=True)
+            return
+        if not allowed_users:
+            await interaction.response.send_message("ℹ️ The access list is currently empty.", ephemeral=True)
+            return
+        list_mentions = [f"• <@{u_id}>" for u_id in allowed_users]
+        await interaction.response.send_message("📋 **Users with access to `!fish`:**\n" + "\n".join(list_mentions), ephemeral=True)
+
+    @discord.ui.button(label="Set Activity 🎮", style=discord.ButtonStyle.gray)
+    async def status_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != BOT_OWNER_ID:
+            await interaction.response.send_message("❌ Only the bot owner can use this panel!", ephemeral=True)
+            return
+        await interaction.response.send_modal(StatusModal())
+
+    @discord.ui.button(label="Set Bubble Status 💭", style=discord.ButtonStyle.gray)
+    async def status2_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != BOT_OWNER_ID:
+            await interaction.response.send_message("❌ Only the bot owner can use this panel!", ephemeral=True)
+            return
+        await interaction.response.send_modal(Status2Modal())
+
+
+# ==================== COMEDZI CLASICE PE CHAT ====================
+
+@bot.command(name="cmdbar")
+async def cmdbar(ctx):
+    # Trimitere panou public
+    await ctx.reply("🎛️ **Public Command Bar:** Click a button below to interact:", view=PublicCmdBarView())
+
+@bot.command(name="cmdbar2")
+async def cmdbar2(ctx):
+    if ctx.author.id != BOT_OWNER_ID:
+        await ctx.reply("❌ Only the bot owner can use this command!")
+        return
+    # Trimitere panou privat (doar tu îl poți butona)
+    await ctx.reply("👑 **Bot Owner Control Panel:** Manage the bot securely below:", view=OwnerCmdBarView())
+
+# Păstrăm și variantele vechi text în caz de urgență
 @bot.command(name="access")
 async def access(ctx, member: discord.Member = None):
-    if ctx.author.id != BOT_OWNER_ID:
-        await ctx.reply("❌ Only the bot owner can use this command!")
-        return
+    if ctx.author.id != BOT_OWNER_ID: return
+    if member: allowed_users.add(member.id); await ctx.reply(f"✅ Access GRANTED to {member.mention}.")
 
-    if member is None:
-        await ctx.reply("❌ Please mention a user! Example: `!access @user`")
-        return
-
-    allowed_users.add(member.id)
-    await ctx.reply(f"✅ Access GRANTED! {member.mention} can now use `!fish`.")
-
-# 2. Revoke Access Command (!unaccess @user)
 @bot.command(name="unaccess")
 async def unaccess(ctx, member: discord.Member = None):
-    if ctx.author.id != BOT_OWNER_ID:
-        await ctx.reply("❌ Only the bot owner can use this command!")
-        return
+    if ctx.author.id != BOT_OWNER_ID: return
+    if member and member.id in allowed_users: allowed_users.remove(member.id); await ctx.reply(f"❌ Access REVOKED from {member.mention}.")
 
-    if member is None:
-        await ctx.reply("❌ Please mention a user! Example: `!unaccess @user`")
-        return
-
-    if member.id in allowed_users:
-        allowed_users.remove(member.id)
-        await ctx.reply(f"❌ Access REVOKED! {member.mention} can no longer use `!fish`.")
-    else:
-        await ctx.reply(f"ℹ️ {member.name} didn't have access anyway.")
-
-# 3. View Access List Command (!aclist)
-@bot.command(name="aclist")
-async def aclist(ctx):
-    if ctx.author.id != BOT_OWNER_ID:
-        await ctx.reply("❌ Only the bot owner can use this command!")
-        return
-
-    if not allowed_users:
-        await ctx.reply("ℹ️ The access list is currently empty. No one has permission to fish.")
-        return
-
-    list_mentions = [f"• <@{user_id}>" for user_id in allowed_users]
-    access_list_msg = "📋 **Users with access to `!fish`:**\n" + "\n".join(list_mentions)
-    
-    await ctx.reply(access_list_msg)
-
-# 4. Classic Fish Command (!fish)
 @bot.command(name="fish")
 async def fish(ctx):
-    if ctx.author.id == BOT_OWNER_ID or ctx.author.id in allowed_users:
-        await ctx.reply("Here is ya fish 🐟")
-    else:
-        await ctx.reply("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭𝘺 𝘥𝘰𝘯’t 𝘩𝘢𝘷𝘦 𝘱ε𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴ε 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.")
-
-# 5. Troll Command (!cmd) - Public for everyone!
-@bot.command(name="cmd")
-async def cmd(ctx):
-    await ctx.reply("Imagine using this command only to realize that it does nothing. 🫵😂")
-
-# 6. Change Bot Activity Command (!status [text]) - Owner Only!
-@bot.command(name="status")
-async def status(ctx, *, text: str = None):
-    if ctx.author.id != BOT_OWNER_ID:
-        await ctx.reply("❌ Only the bot owner can use this command!")
-        return
-
-    if text is None:
-        await ctx.reply("❌ Please provide a text for the activity! Example: `!status coding...`")
-        return
-
-    # Changes the bot's "Playing..." status
-    await bot.change_presence(activity=discord.Game(name=text))
-    await ctx.reply(f"⚙️ Activity updated successfully to: **Playing {text}**")
-
-# 7. Change Bot Custom Status Command (!status2 [text]) - Owner Only!
-@bot.command(name="status2")
-async def status2(ctx, *, text: str = None):
-    if ctx.author.id != BOT_OWNER_ID:
-        await ctx.reply("❌ Only the bot owner can use this command!")
-        return
-
-    if text is None:
-        await ctx.reply("❌ Please provide a text for the custom status! Example: `!status2 Stausul asta`")
-        return
-
-    # Changes the bot's Speech Bubble Custom Status exactly like the screenshot
-    await bot.change_presence(activity=discord.CustomActivity(name=text))
-    await ctx.reply(f"⚙️ Custom Status bubble updated successfully to: **{text}**")
+    if ctx.author.id == BOT_OWNER_ID or ctx.author.id in allowed_users: await ctx.reply("Here is ya fish 🐟")
+    else: await ctx.reply("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝒏𝘵𝘭ÿ 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷𝘦 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯...")
 
 bot.run(os.environ.get("DISCORD_TOKEN"))
