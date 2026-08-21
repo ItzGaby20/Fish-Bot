@@ -16,7 +16,7 @@ async def on_ready():
     print(f"The squad is up! {bot.user.name} is running with pop-up panels! 🐟")
     await bot.change_presence(activity=discord.CustomActivity(name="Thinking about fishes 🐟"))
 
-# ==================== FORMULARE POP-UP (MODALS) ====================
+# ==================== POP-UP FORMS (MODALS) ====================
 
 class AccessModal(discord.ui.Modal, title="Grant Access Control"):
     user_id_input = discord.ui.TextInput(label="User ID", placeholder="Enter the 18+ digit Discord User ID here...", min_length=15, max_length=25)
@@ -56,7 +56,7 @@ class Status2Modal(discord.ui.Modal, title="Change Bot Custom Status Bubble"):
         await interaction.response.send_message(f"⚙️ Custom Status bubble updated successfully to: **{text}**", ephemeral=True)
 
 
-# ==================== INTERFEȚE CU BUTOANE (VIEWS) ====================
+# ==================== BUTTON INTERFACES (VIEWS) ====================
 
 class PublicCmdBarView(discord.ui.View):
     def __init__(self):
@@ -67,7 +67,7 @@ class PublicCmdBarView(discord.ui.View):
         if interaction.user.id == BOT_OWNER_ID or interaction.user.id in allowed_users:
             await interaction.response.send_message("Here is ya fish 🐟", ephemeral=False)
         else:
-            await interaction.response.send_message("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭𝘺 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷ε 𝘱ε𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴ε 𝘵𝘩𝘪𝕤 𝘤𝘰𝘮𝘢𝘯𝘥.", ephemeral=True)
+            await interaction.response.send_message("❌ 𝘚𝘰𝘳𝘳ÿ ÿ𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭ÿ 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷ε 𝘱ε𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯 𝘵𝘰 𝘶𝘴ε 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘢𝘯𝘥.", ephemeral=True)
 
     @discord.ui.button(label="Troll Cmd 🫵", style=discord.ButtonStyle.gray)
     async def troll_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -118,11 +118,10 @@ class OwnerCmdBarView(discord.ui.View):
         await interaction.response.send_modal(Status2Modal())
 
 
-# ==================== COMEDZI CLASICE PE CHAT ====================
+# ==================== CLASSIC CHAT COMMANDS ====================
 
 @bot.command(name="cmdbar")
 async def cmdbar(ctx):
-    # Trimitere panou public
     await ctx.reply("🎛️ **Public Command Bar:** Click a button below to interact:", view=PublicCmdBarView())
 
 @bot.command(name="cmdbar2")
@@ -130,10 +129,8 @@ async def cmdbar2(ctx):
     if ctx.author.id != BOT_OWNER_ID:
         await ctx.reply("❌ Only the bot owner can use this command!")
         return
-    # Trimitere panou privat (doar tu îl poți butona)
     await ctx.reply("👑 **Bot Owner Control Panel:** Manage the bot securely below:", view=OwnerCmdBarView())
 
-# Păstrăm și variantele vechi text în caz de urgență
 @bot.command(name="access")
 async def access(ctx, member: discord.Member = None):
     if ctx.author.id != BOT_OWNER_ID: return
@@ -147,6 +144,32 @@ async def unaccess(ctx, member: discord.Member = None):
 @bot.command(name="fish")
 async def fish(ctx):
     if ctx.author.id == BOT_OWNER_ID or ctx.author.id in allowed_users: await ctx.reply("Here is ya fish 🐟")
-    else: await ctx.reply("❌ 𝘚𝘰𝘳𝘳𝘺 𝘺𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝒏𝘵𝘭ÿ 𝘥𝘰𝘯’𝘵 𝘩𝘢𝘷𝘦 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪𝘰𝘯...")
+    else: await ctx.reply("❌ 𝘚𝘰𝘳𝘳ÿ ÿ𝘰𝘶 𝘤𝘶𝘳𝘳𝘦𝘯𝘵𝘭ÿ 𝘥𝘰𝘯’ｔ 𝘩𝘢𝘷ｅ 𝘱𝘦𝘳𝘮𝘪𝘴𝘴𝘪ｏ𝘯...")
+
+# ==================== BOT MESSAGE PURGE COMMAND ====================
+
+@bot.command(name="gberease")
+async def gberease(ctx):
+    if ctx.author.id != BOT_OWNER_ID:
+        await ctx.reply("❌ Only the bot owner can use this command!")
+        return
+
+    # Try to delete the command message to leave no trace in chat
+    try:
+        await ctx.message.delete()
+    except discord.Forbidden:
+        pass
+
+    def is_bot(message):
+        return message.author.id == bot.user.id
+
+    try:
+        # Scans the last 100 messages in the channel and purges only the bot's messages
+        deleted = await ctx.channel.purge(limit=100, check=is_bot)
+        
+        # Sends a temporary confirmation message that auto-deletes after 3 seconds
+        await ctx.send(f"🧹 Successfully deleted {len(deleted)} of my messages from this channel.", delete_after=3)
+    except discord.Forbidden:
+        await ctx.send("❌ I do not have the `Manage Messages` permission required to delete messages.", delete_after=5)
 
 bot.run(os.environ.get("DISCORD_TOKEN"))
