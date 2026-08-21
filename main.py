@@ -57,7 +57,7 @@ async def on_ready():
 @bot.tree.command(name="access", description="Grant a user access to the /fish command (Owner Only)")
 async def access(interaction: discord.Interaction):
     if interaction.user.id != OWNER_ID:
-        await interaction.response.send_message("❌ Only the Server Owner can use this command!", ephemeral=True)
+        await interaction.response.send_message("❌ Only the bot owner can access this command.", ephemeral=True)
         return
 
     # Fetch all members currently in the server
